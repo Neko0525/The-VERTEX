@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>VERTEX Habit Tracker</title>
+  <style>
+    :root{
+      --bg:#0f0f10;
+      --panel:#171719;
+      --panel-2:#101113;
+      --text:#e8e8ea;
+      --muted:#a7a7ad;
+      --border:#242429;
+      --accent:#00ffe7;
+      --gold:#ffd36b;
+      --green-0:#2b2e31;
+      --green-1:#1b4024;
+      --green-2:#216d35;
+      --green-3:#3aa555;
+      --green-4:#72d676;
+      --radius:14px;
+      --shadow:0 2px 0 rgba(255,255,255,0.02) inset, 0 12px 30px rgba(0,0,0,0.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font:14px/1.45 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    /* Header / Brand */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      background:linear-gradient(180deg,#0f0f10 0%,rgba(15,15,16,0.85) 100%);
+      border-bottom:1px solid var(--border);
+      padding:16px 20px;
+    }
+    .brand{
+      max-width:1200px; margin:0 auto; display:flex; align-items:center; gap:12px;
+      font-weight:800; letter-spacing:.5px; font-size:18px;
+    }
+    .logo{
+      width:28px; height:28px; position:relative; flex:0 0 28px;
+      filter:drop-shadow(0 4px 12px rgba(255,211,107,.35)) drop-shadow(0 0 8px rgba(0,255,231,.35));
+    }
+    .logo::before,.logo::after{
+      content:""; position:absolute; top:0; width:9px; height:28px; border-radius:2px;
+      background:linear-gradient(180deg,var(--accent),#b700ff,var(--gold));
+    }
+    .logo::before{ left:5px; transform:skew(-14deg); }
+    .logo::after{ right:5px; transform:skew(14deg); }
+    .brand-name{
+      background:linear-gradient(90deg,var(--accent),#b700ff,var(--gold));
+      -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .brand-muted{ color:var(--muted); font-weight:600; margin-left:6px }
+
+    /* Grid shell */
+    .wrap{max-width:1200px; margin:18px auto; padding:0 20px}
+    .grid{display:grid; gap:16px}
+
+    /* Top metrics row (like screenshot) */
+    .row-top{
+      grid-template-columns: 2fr 1fr;
+    }
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px;
+    }
+    .card-title{
+      display:flex; align-items:center; justify-content:space-between;
+      color:var(--muted); font-weight:600; margin-bottom:8px; font-size:12px;
+    }
+    .number-xl{ font-size:28px; font-weight:800; letter-spacing:.2px }
+    .kpi-mono{ color:var(--muted); font-variant-numeric:tabular-nums; font-weight:600 }
+
+    .mini-chart{
+      height:120px; border-radius:10px; background:linear-gradient(180deg,#141416,#0f1012);
+      border:1px solid var(--border); position:relative; overflow:hidden;
+    }
+    .spark{
+      position:absolute; inset:0;
+      background:
+        linear-gradient(0deg, rgba(255,211,107,.15), rgba(255,211,107,0) 40%),
+        linear-gradient(180deg, rgba(0,255,231,.1), rgba(0,0,0,0) 60%);
+    }
+
+    .hist-bars{ display:flex; gap:6px; align-items:flex-end; height:120px }
+    .bar{ flex:1; background:#232429; border-radius:6px }
+    .bar--accent{ background:linear-gradient(180deg,var(--gold),#8a6b2a) }
+
+    /* Mid row: donut + badges */
+    .row-mid{ grid-template-columns: 1.2fr 1fr }
+    .donut-wrap{ display:flex; gap:16px; align-items:center }
+    .donut{
+      width:160px; height:160px; border-radius:50%;
+      background:conic-gradient(var(--gold) var(--p,0%), #2a2a2e 0);
+      display:grid; place-items:center; border:8px solid #121215;
+      box-shadow:0 0 0 1px var(--border) inset, 0 10px 28px rgba(0,0,0,.35);
+    }
+    .donut > div{ font-weight:800; font-size:20px }
+    .legend{ display:grid; gap:6px; color:var(--muted) }
+    .legend b{ color:var(--text) }
+
+    .badges{ display:flex; gap:10px; flex-wrap:wrap; }
+    .badge{
+      width:58px; height:58px; border-radius:12px;
+      background:linear-gradient(135deg,#2a2a2e,#141416);
+      border:1px solid var(--border); box-shadow:var(--shadow);
+      display:grid; place-items:center; font-weight:700; color:#cad0d6;
+    }
+
+    /* Heatmap section */
+    .heat-head{
+      display:flex; align-items:center; justify-content:space-between; margin-bottom:10px
+    }
+    .heat-title{ font-size:18px; font-weight:800 }
+    .heat-sub{ color:var(--muted); font-weight:600 }
+    .pill{
+      background:#15161a; border:1px solid var(--border); color:var(--text);
+      padding:6px 10px; border-radius:10px; font-size:12px;
+    }
+
+    .heatmap{
+      display:grid; grid-template-columns: repeat(52, 14px);
+      gap:4px; padding:12px; border-radius:12px;
+      background:var(--panel-2); border:1px solid var(--border)
+    }
+    .cell{
+      width:14px; height:14px; border-radius:3px; background:var(--green-0);
+      transition:transform .08s ease, box-shadow .2s ease;
+      box-shadow:0 0 0 1px rgba(255,255,255,0.02) inset;
+      cursor:pointer;
+    }
+    .c1{ background:var(--green-1) } .c2{ background:var(--green-2) }
+    .c3{ background:var(--green-3) } .c4{ background:var(--green-4) }
+    .cell:active{ transform:scale(.9) }
+
+    /* Recent list (like the bottom list) */
+    .list-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px }
+    .tabs{ display:flex; gap:8px }
+    .tab{
+      background:#15161a; border:1px solid var(--border); color:var(--text);
+      padding:8px 10px; border-radius:10px; font-size:12px; font-weight:600
+    }
+    .item{
+      background:#141416; border:1px solid var(--border);
+      border-radius:12px; padding:14px 16px; margin-top:10px;
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .item-title{ font-weight:700 }
+    .item-meta{ color:var(--muted); font-variant-numeric:tabular-nums }
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .row-top{ grid-template-columns:1fr }
+      .row-mid{ grid-template-columns:1fr }
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div class="brand-name">VERTEX</div>
+      <div class="brand-muted">Habit Tracker</div>
+    </div>
+  </div>
+
+  <div class="wrap grid">
+    <!-- Top row -->
+    <div class="grid row-top">
+      <!-- Left: trend & headline stats (visual stub to match layout) -->
+      <div class="card">
+        <div class="card-title">
+          <span>Consistency Rating</span>
+          <span class="kpi-mono">2024 → 2025</span>
+        </div>
+        <div class="number-xl">1,653</div>
+        <div class="mini-chart"><div class="spark"></div></div>
+      </div>
+
+      <!-- Right: histogram stub -->
+      <div class="card">
+        <div class="card-title"><span>Top Percentile</span><span class="kpi-mono">Live</span></div>
+        <div class="number-xl">16.89%</div>
+        <div class="hist-bars" aria-hidden="true">
+          <!-- bars (visual only, matching screenshot weight) -->
+          <div class="bar" style="height:20%"></div>
+          <div class="bar" style="height:35%"></div>
+          <div class="bar" style="height:52%"></div>
+          <div class="bar" style="height:68%"></div>
+          <div class="bar bar--accent" style="height:72%"></div>
+          <div class="bar" style="height:54%"></div>
+          <div class="bar" style="height:40%"></div>
+          <div class="bar" style="height:28%"></div>
+          <div class="bar" style="height:24%"></div>
+          <div class="bar" style="height:18%"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mid row: donut + badges -->
+    <div class="grid row-mid">
+      <div class="card">
+        <div class="card-title"><span>Completion</span></div>
+        <div class="donut-wrap">
+          <div class="donut" id="donut" style="--p:72">
+            <div>72%</div>
+          </div>
+          <div class="legend">
+            <div><b>Completed:</b> <span id="kpi-complete">545</span></div>
+            <div><b>Active:</b> <span id="kpi-active">9</span></div>
+            <div><b>Total:</b> <span id="kpi-total">3671</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span>Badges</span></div>
+        <div class="badges">
+          <div class="badge">365</div>
+          <div class="badge">30</div>
+          <div class="badge">7</div>
+          <div class="badge">3</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Heatmap row -->
+    <div class="card">
+      <div class="heat-head">
+        <div>
+          <div class="heat-title">Activity in the past year</div>
+          <div class="heat-sub"><span id="total-acts">0</span> check-ins • Max streak: <span id="max-streak">0</span></div>
+        </div>
+        <div class="pill">Current ▾</div>
+      </div>
+      <div id="heatmap" class="heatmap"></div>
+    </div>
+
+    <!-- Recent list -->
+    <div class="card">
+      <div class="list-head">
+        <div class="tabs">
+          <div class="tab">Recent</div>
+          <div class="tab">List</div>
+          <div class="tab">Details</div>
+        </div>
+        <div class="kpi-mono"><a style="color:var(--muted); text-decoration:none;" href="#">View all</a></div>
+      </div>
+
+      <div id="feed">
+        <!-- items injected -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ===========
+       STATE (persists)
+       =========== */
+    const STORAGE_KEY = "vertex.heatmap.v1";
+    const DAYS = 365;
+    // levels 0..4
+    let levels = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (!Array.isArray(levels) || levels.length !== DAYS) {
+      levels = Array(DAYS).fill(0).map(() => Math.floor(Math.random()*3)); // soft seed
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(levels));
+    }
+
+    /* ===========
+       HEATMAP RENDER
+       =========== */
+    const heat = document.getElementById("heatmap");
+    const totalActsEl = document.getElementById("total-acts");
+    const maxStreakEl = document.getElementById("max-streak");
+
+    function renderHeatmap(){
+      heat.innerHTML = "";
+      let total=0, maxStreak=0, cur=0;
+      for(let i=0;i<DAYS;i++){
+        const lvl = levels[i]|0;
+        if(lvl>0){ total++; cur++; if(cur>maxStreak) maxStreak=cur; } else { cur=0; }
+        const d = document.createElement("div");
+        d.className = "cell" + (lvl? (" c"+lvl):"");
+        d.dataset.idx = i;
+        d.title = `Day ${i+1} • Level ${lvl}`;
+        d.addEventListener("click", () => {
+          const idx = +d.dataset.idx;
+          levels[idx] = (levels[idx] + 1) % 5;
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(levels));
+          renderHeatmap();
+          addFeedEntry(`Updated day ${idx+1} to level ${levels[idx]}`, "just now");
+          recalcKPIs();
+        });
+        heat.appendChild(d);
+      }
+      totalActsEl.textContent = total;
+      maxStreakEl.textContent = maxStreak;
+    }
+
+    /* ===========
+       RECENT FEED (visual, serious)
+       =========== */
+    const feed = document.getElementById("feed");
+    function addFeedEntry(title, when){
+      const row = document.createElement("div");
+      row.className = "item";
+      row.innerHTML = `
+        <div class="item-title">${title}</div>
+        <div class="item-meta">${when}</div>
+      `;
+      feed.prepend(row);
+      // cap list length
+      while(feed.children.length>8) feed.lastElementChild.remove();
+    }
+
+    // Seed a few rows
+    ["Morning Run", "Read 20 pages", "Hydration check", "Deep Work session"]
+      .forEach((t,i)=> addFeedEntry(t, `${2*(i+1)}h ago`));
+
+    /* ===========
+       KPI (donut + numbers) — simple example using heatmap totals
+       =========== */
+    function recalcKPIs(){
+      const completed = levels.filter(v=>v>0).length;
+      const total = DAYS;
+      const pct = Math.round((completed/total)*100);
+      document.getElementById("donut").style.setProperty("--p", pct);
+      document.getElementById("kpi-complete").textContent = completed;
+      document.getElementById("kpi-total").textContent = total;
+      document.getElementById("kpi-active").textContent = Math.max(1, Math.round(pct/10));
+    }
+
+    // Initial render
+    renderHeatmap();
+    recalcKPIs();
+  </script>
+</body>
+</html>
